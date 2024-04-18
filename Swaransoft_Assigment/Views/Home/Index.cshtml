@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+   <div class="card">
+       <div class="card-body">
+           <h1>Hello Organization</h1>
+           <spam>Please CLick on Below button Go to Assignement</spam>
+       </div>
+        <div class="btn-default" style="text-align:right;">
+            @Html.ActionLink("Add Employee", "Index", "Student", null, new { @class = "btn btn-danger " })
+        </div>
+
+   </div>
+</div>

@@ -1,0 +1,416 @@
+﻿@model List<Swaransoft_Assigment.Models.UserDetails>
+@{
+    ViewBag.Title = "Employee Details";
+}
+
+<style>
+    span.select2-container {
+        width: 100% !important;
+    }
+
+    .background-overlay {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 10000;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+</style>
+
+<div class="card">
+    <div class="card-body">
+        <form id="employee-form">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Enter Your Name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Enter Your Email Id" required>
+            </div>
+            <div class="form-group">
+                <label for="mobile">Mobile:</label>
+                <input type="text" id="mobile" name="mobile" class="form-control" placeholder="Enter Your Mobile Number" maxlength="10" required>
+            </div>
+
+            <div class="form-group">
+                <label for="state">State:</label>
+                <select id="state" name="state" class="form-control" required>
+                    <option value="">Select State</option>
+                    @foreach (var state in ViewBag.States)
+                    {
+                        <option value="@state.StateId">@state.StateName</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="city">City:</label>
+                <select id="city" name="city" class="form-control" required>
+                    <option value="">Select City</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="about">About Yourself:</label>
+                <textarea id="about" name="about" class="form-control" maxlength="250"></textarea>
+                <span id="char-count" class="text-muted">250 characters remaining</span>
+            </div>
+            <div class="form-group">
+                <label for="photo">Upload Photo:</label>
+                <input type="file" id="photo" name="photo" class="form-control-file" accept="image/*">
+            </div>
+            <div class="form-group">
+                <input type="button" class="btn btn-primary" value="Submit" onclick="SaveDetails()">
+            </div>
+        </form>
+    </div>
+</div>
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Edit Employee Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editEmployeeForm">
+                    <input type="hidden" id="employeeId" name="employeeId" value="">
+                    <div class="form-group">
+                        <label for="updatename">Name:</label>
+                        <input type="text" id="updatename" name="name" class="form-control" placeholder="Enter Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="updateemail">Email:</label>
+                        <input type="email" id="updateemail" name="email" class="form-control" placeholder="Enter Your Email Id" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="updatemobile">Mobile:</label>
+                        <input type="text" id="updatemobile" name="mobile" class="form-control" placeholder="Enter Your Mobile Number" maxlength="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="updateabout">About Yourself:</label>
+                        <textarea id="updateabout" name="about" class="form-control" maxlength="250"></textarea>
+                        <span id="char-count" class="text-muted">250 characters remaining</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-4 control-label">State Name</label>
+                        <div class="col-md-6">
+                            <select class="form-control" id="ddlState"></select>
+                            <br />
+                        </div>
+                    </div>
+                    <br />
+                    <div class="form-group">
+                        <label class="col-md-4 control-label">City Name</label>
+                        <div class="col-md-6">
+                            <select class="form-control" id="ddlCity"></select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="updateEmployeeBtn">Update changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-body">
+
+        <table style="margin-top: 10px; width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Name</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Email</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">MobileNumber</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Remarks</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Edit</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">Remove</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="employee-id hidden" data-id="@item.Id" style="border: 1px solid #ddd; padding: 8px;">@item.Name</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">@item.Email</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">@item.MobileNumber</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">@item.Remarks</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">
+                            <button class="edit-button" data-toggle="modal" data-target="#editModal">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">
+                            <button class="trash-button">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+
+        $('.trash-button').click(function () {
+            debugger;
+            var id = $(this).closest('tr').find('.employee-id').data('id');
+
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("Delete", "Student")',
+                dataType: 'json',
+                data: { id: id },
+                success: function (response) {
+
+                    if (response.success) {
+                        swal({
+                            position: 'top',
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            confirmButtonColor: '#3085d6',
+                        }).then(function () {
+
+                            window.location.href = '@Url.Action("Index", "Student")';
+                        });
+
+
+                    } else {
+
+                        swal({
+                            position: 'top',
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message,
+                            confirmButtonColor: '#3085d6'
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+
+                    alert('An error occurred while deleting employee data: ' + error);
+                }
+            });
+        });
+        $('.edit-button').click(function () {
+            var employeeId = $(this).closest('tr').find('.employee-id').data('id');
+            fetchEmployeeDetails(employeeId);
+        });
+        $('#state').change(function () {
+            var stateId = $(this).val();
+            if (stateId) {
+                $.ajax({
+                    url: '/Student/GetCities',
+                    type: 'GET',
+                    data: { stateId: stateId },
+                    success: function (cities) {
+                        $('#city').empty().append($('<option>', {
+                            value: '',
+                            text: 'Select City'
+                        }));
+                        $.each(cities, function (index, city) {
+                            $('#city').append($('<option>', {
+                                value: city.cityId,
+                                text: city.city
+
+                            }));
+                        });
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(textStatus, errorThrown);
+                    }
+                });
+            } else {
+                $('#city').empty().append($('<option>', {
+                    value: '',
+                    text: 'Select City'
+                }));
+            }
+        });
+
+        $('#updateEmployeeBtn').click(function () {
+            var employeeId = $('#employeeId').val();
+            var name = $('#updatename').val();
+            var email = $('#updateemail').val();
+            var mobilenumber = $('#updatemobile').val();
+            var about = $('#updateabout').val();
+            var state = $('#ddlState').val();
+            var city = $('#ddlCity').val();
+
+            // Prepare data to send via AJAX
+            var data = {
+                id: employeeId,
+                name: name,
+                email: email,
+                mobilenumber: mobilenumber,
+                remarks: about,
+                state: state,
+                city: city
+            };
+
+            // AJAX request to update user details
+            $.ajax({
+                url: '/Student/UpdateEmployeeDetails',
+                type: 'POST',
+                data: data,
+                success: function (response) {
+                    if (response.success) {
+                        // Handle success message
+                        swal("Success!", response.message, "success").then(function () {
+                            location.reload();
+                        });
+                        // Optionally, you can close the modal or reload the page
+                    } else {
+                        // Handle error message
+                        swal("Failed!", response.message, "failed").then(function () {
+                            location.reload();
+                        });
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log(textStatus, errorThrown);
+                    // Handle error message
+                    swal("Error!", "An error occurred while updating employee details.", "error");
+                }
+            });
+        });
+
+
+    });
+    function SaveDetails() {
+        var name = $("#name").val();
+        var email = $("#email").val();
+        var mobile = $("#mobile").val();
+        var state = $("#state").val();
+        var city = $("#city").val();
+        var about = $("#about").val();
+        var photoInput = $("#photo")[0];
+
+        if (name.trim() === "") {
+            swal("Error!", "Please Enter Your Name.", "error");
+            return;
+        }
+        if (email.trim() === "") {
+            swal("Error!", "Please enter your email.", "error");
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append("Name", name);
+        formData.append("Email", email);
+        formData.append("MobileNumber", mobile);
+        formData.append("State", state);
+        formData.append("City", city);
+        formData.append("Remarks", about);
+
+        if (photoInput.files.length > 0) {
+            var photo = photoInput.files[0].name;
+            formData.append("uploadphoto", photo);
+        } else {
+            formData.append("uploadphoto", "");
+        }
+
+        $.ajax({
+            url: '/Student/SaveEmployee',
+            type: 'POST',
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function (response) {
+                if (response.success) {
+                    swal("Success!", response.message, "success").then(function () {
+                        location.reload();
+                    });
+                } else {
+                    swal("Failed!", response.message, "error");
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log(textStatus, errorThrown);
+            }
+        });
+    }
+  
+    function fetchEmployeeDetails(employeeId) {
+
+        $.ajax({
+            url: '/Student/GetEmployeeDetails',
+            type: 'GET',
+            data: { id: employeeId },
+            success: function (response) {
+                if (response.success) {
+                    debugger;
+                    $('#employeeId').val(response.id);
+                    $('#updatename').val(response.name);
+                    $('#updateemail').val(response.email);
+                    $('#updatemobile').val(response.mobilenumber);
+                    $('#updateabout').val(response.remarks);
+                    var states = response.states;
+                    var ddlState = $('#ddlState');
+                    ddlState.empty(); 
+                    ddlState.append($("<option></option>").val(response.stateId).text(response.state));
+                    var states = response.states;
+                    var ddlState = $('#ddlCity');
+                    ddlState.empty();
+                    ddlState.append($("<option></option>").val(response.cityId).text(response.city));
+                  
+
+                    $('#editModal').modal('show');
+                } else {
+                    // Handle error
+                    alert(response.message);
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error(textStatus, errorThrown);
+            }
+        });
+    }
+    // $('#state').change(function () {
+    //     var stateId = $(this).val();
+    //     if (stateId) {
+    //         $.ajax({
+    //             url: '/Student/GetCities',
+    //             type: 'GET',
+    //             data: { stateId: stateId },
+    //             success: function (cities) {
+    //                 $('#city').empty().append($('<option>', {
+    //                     value: '',
+    //                     text: 'Select City'
+    //                 }));
+    //                 $.each(cities, function (index, city) {
+    //                     $('#city').append($('<option>', {
+    //                         value: city.cityId,
+    //                         text: city.city
+
+    //                     }));
+    //                 });
+    //             },
+    //             error: function (jqXHR, textStatus, errorThrown) {
+    //                 console.log(textStatus, errorThrown);
+    //             }
+    //         });
+    //     } else {
+    //         $('#city').empty().append($('<option>', {
+    //             value: '',
+    //             text: 'Select City'
+    //         }));
+    //     }
+    // });
+
+</script>
